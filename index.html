@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Draw Studio</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- HEADER -->
+    <header class="topbar">
+
+        <div class="logo">
+            🎨 Draw Studio
+        </div>
+
+        <div class="top-actions">
+
+            <button id="undoBtn">
+                ↩️ Undo
+            </button>
+
+            <button id="redoBtn">
+                ↪️ Redo
+            </button>
+
+            <button id="clearBtn">
+                🗑️ Clear
+            </button>
+
+            <button id="saveBtn">
+                💾 Save
+            </button>
+
+        </div>
+
+    </header>
+
+
+    <!-- MAIN APP -->
+    <main class="app">
+
+        <!-- TOOLBAR -->
+        <aside class="toolbar">
+
+            <h2>Tools</h2>
+
+
+            <!-- DRAWING TOOLS -->
+            <div class="tool-section">
+
+                <h3>Drawing</h3>
+
+                <button
+                    class="tool-btn active"
+                    data-tool="pencil">
+
+                    ✏️ Pencil
+
+                </button>
+
+
+                <button
+                    class="tool-btn"
+                    data-tool="eraser">
+
+                    🧽 Eraser
+
+                </button>
+
+
+                <button
+                    class="tool-btn"
+                    data-tool="line">
+
+                    ➖ Line
+
+                </button>
+
+            </div>
+
+
+            <!-- COLOR -->
+            <div class="tool-section">
+
+                <h3>Color</h3>
+
+                <input
+                    type="color"
+                    id="colorPicker"
+                    value="#000000">
+
+            </div>
+
+
+            <!-- BRUSH SIZE -->
+            <div class="tool-section">
+
+                <h3>Brush Size</h3>
+
+                <input
+                    type="range"
+                    id="brushSize"
+                    min="1"
+                    max="50"
+                    value="5">
+
+                <span id="sizeValue">
+                    5 px
+                </span>
+
+            </div>
+
+
+            <!-- SHAPES -->
+            <div class="tool-section">
+
+                <h3>20 Shapes</h3>
+
+                <div class="shape-grid">
+
+
+                    <!-- 1 -->
+                    <button
+                        class="shape-btn"
+                        data-shape="line">
+
+                        ➖
+                        <span>Line</span>
+
+                    </button>
+
+
+                    <!-- 2 -->
+                    <button
+                        class="shape-btn"
+                        data-shape="rectangle">
+
+                        ▭
+                        <span>Rectangle</span>
+
+                    </button>
+
+
+                    <!-- 3 -->
+                    <button
+                        class="shape-btn"
+                        data-shape="square">
+
+                        ◻️
+                        <span>Square</span>
+
+                    </button>
+
+
+                    <!-- 4 -->
+                    <button
+                        class="shape-btn"
+                        data-shape="circle">
+
+                        ⭕
+                        <span>Circle</span>
+
+                    </button>
+
+
+                    <!-- 5 -->
+                    <button
+                        class="shape-btn"
+                        data-shape="ellipse">
+
+                        ⬭
+                        <span>Ellipse</span>
+
+                    </button>
+
+
+                    <!-- 6 -->
+                    <button
+                        class="shape-btn"
+                        data-shape="triangle">
+
+                        🔺
+                        <span>Triangle</span>
+
+                    </button>
+
+
+                    <!-- 7 -->
+                    <button
+                        class="shape-btn"
+                        data-shape="inverted-triangle">
+
+                        🔻
+                        <span>Inverted</span>
+
+                    </button>
+
+
+                    <!-- 8 -->
+                    <button
+                        class="shape-btn"
+                        data-shape="diamond">
+
+                        🔷
+                        <span>Diamond</span>
+
+                    </button>
+
+
+                    <!-- 9 -->
+                    <button
+                        class="shape-btn"
+                        data-shape="pentagon">
+
+                        ⬟
+                        <span>Pentagon</span>
+
+                    </button>
+
+
+                    <!-- 10 -->
+                    <button
+                        class="shape-btn"
+                        data-shape="hexagon">
+
+                        ⬢
+                        <span>Hexagon</span>
+
+                    </button>
+
+
+                    <!-- 11 -->
+                    <button
+                        class="shape-btn"
+                        data-shape="star">
+
+                        ⭐
+                        <span>Star</span>
+
+                    </button>
+
+
+                    <!-- 12 -->
+                    <button
+                        class="shape-btn"
+                        data-shape="heart">
+
+                        ❤️
+                        <span>Heart</span>
+
+                    </button>
+
+
+                    <!-- 13 -->
+                    <button
+                        class="shape-btn"
+                        data-shape="cloud">
+
+                        ☁️
+                        <span>Cloud</span>
+
+                    </button>
+
+
+                    <!-- 14 -->
+                    <button
+                        class="shape-btn"
+                        data-shape="lightning">
+
+                        ⚡
+                        <span>Lightning</span>
+
+                    </button>
+
+
+                    <!-- 15 -->
+                    <button
+                        class="shape-btn"
+                        data-shape="arrow">
+
+                        ➡️
+                        <span>Arrow</span>
+
+                    </button>
+
+
+                    <!-- 16 -->
+                    <button
+                        class="shape-btn"
+                        data-shape="double-arrow">
+
+                        ↔️
+                        <span>Double Arrow</span>
+
+                    </button>
+
+
+                    <!-- 17 -->
+                    <button
+                        class="shape-btn"
+                        data-shape="crescent">
+
+                        🌙
+                        <span>Crescent</span>
+
+                    </button>
+
+
+                    <!-- 18 -->
+                    <button
+                        class="shape-btn"
+                        data-shape="sun">
+
+                        ☀️
+                        <span>Sun</span>
+
+                    </button>
+
+
+                    <!-- 19 -->
+                    <button
+                        class="shape-btn"
+                        data-shape="speech">
+
+                        💬
+                        <span>Speech</span>
+
+                    </button>
+
+
+                    <!-- 20 -->
+                    <button
+                        class="shape-btn"
+                        data-shape="ring">
+
+                        ⭕
+                        <span>Ring</span>
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </aside>
+
+
+        <!-- CANVAS AREA -->
+        <section class="canvas-area">
+
+            <div class="canvas-header">
+
+                <h1>
+                    ✨ Create Something Amazing
+                </h1>
+
+                <p>
+                    Draw, sketch and create your own artwork.
+                </p>
+
+            </div>
+
+
+            <div class="canvas-container">
+
+                <canvas
+                    id="drawingCanvas">
+                </canvas>
+
+            </div>
+
+
+            <div class="canvas-info">
+
+                <span>
+                    🖱️ Mouse: Draw
+                </span>
+
+                <span>
+                    📱 Touch: Draw
+                </span>
+
+                <span>
+                    🎨 Choose a tool or shape
+                </span>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- FOOTER -->
+    <footer>
+
+        <p>
+            🎨 Draw Studio
+        </p>
+
+        <p>
+            Create • Draw • Imagine
+        </p>
+
+    </footer>
+
+
+    <!-- JAVASCRIPT -->
+    <script src="script.js"></script>
+
+</body>
+</html>
