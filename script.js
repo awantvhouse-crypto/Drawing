@@ -1,1683 +1,763 @@
-/* =========================================
-   DRAW STUDIO
-   Complete Drawing App
-========================================= */
+<!DOCTYPE html>
+<html lang="en">
 
-const canvas = document.getElementById("drawingCanvas");
-const ctx = canvas.getContext("2d");
+<head>
+    <meta charset="UTF-8">
 
-const colorPicker = document.getElementById("colorPicker");
-const brushSize = document.getElementById("brushSize");
-const sizeValue = document.getElementById("sizeValue");
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0">
 
-const undoBtn = document.getElementById("undoBtn");
-const redoBtn = document.getElementById("redoBtn");
-const clearBtn = document.getElementById("clearBtn");
-const saveBtn = document.getElementById("saveBtn");
+    <title>My Paint Studio</title>
 
-const toolButtons =
-    document.querySelectorAll(".tool-btn");
+    <link
+        rel="stylesheet"
+        href="style.css">
+</head>
 
-const shapeButtons =
-    document.querySelectorAll(".shape-btn");
 
+<body>
 
-/* =========================================
-   VARIABLES
-========================================= */
+    <!-- =========================
+         TOP TITLE BAR
+    ========================== -->
 
-let currentTool = "pencil";
-let currentShape = null;
+    <header class="title-bar">
 
-let drawing = false;
+        <div class="app-title">
+            🎨 My Paint Studio
+        </div>
 
-let startX = 0;
-let startY = 0;
+        <div class="top-buttons">
 
-let lastX = 0;
-let lastY = 0;
+            <button id="newBtn">
+                📄 New
+            </button>
 
-let history = [];
-let historyIndex = -1;
+            <button id="openBtn">
+                📂 Open
+            </button>
 
+            <button id="saveBtn">
+                💾 Save
+            </button>
 
-/* =========================================
-   CANVAS SIZE
-========================================= */
+            <input
+                type="file"
+                id="imageInput"
+                accept="image/*"
+                hidden>
 
-function resizeCanvas() {
+        </div>
 
-    const oldCanvas =
-        document.createElement("canvas");
+    </header>
 
-    oldCanvas.width = canvas.width;
-    oldCanvas.height = canvas.height;
 
-    const oldCtx =
-        oldCanvas.getContext("2d");
+    <!-- =========================
+         MAIN TOOLBAR
+    ========================== -->
 
-    if (canvas.width > 0 && canvas.height > 0) {
+    <div class="main-toolbar">
 
-        oldCtx.drawImage(canvas, 0, 0);
-    }
 
+        <!-- SELECT -->
+        <button
+            class="tool-button active"
+            data-tool="select"
+            title="Select">
 
-    const rect =
-        canvas.getBoundingClientRect();
+            🔲
+            <span>Select</span>
 
+        </button>
 
-    canvas.width = Math.max(
-        300,
-        Math.floor(rect.width)
-    );
 
-    canvas.height = Math.max(
-        300,
-        Math.floor(rect.height)
-    );
+        <!-- PENCIL -->
+        <button
+            class="tool-button"
+            data-tool="pencil"
+            title="Pencil">
 
+            ✏️
+            <span>Pencil</span>
 
-    ctx.fillStyle = "#ffffff";
+        </button>
 
-    ctx.fillRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
 
+        <!-- BRUSH -->
+        <button
+            class="tool-button"
+            data-tool="brush"
+            title="Brush">
 
-    if (
-        oldCanvas.width > 0 &&
-        oldCanvas.height > 0
-    ) {
+            🖌️
+            <span>Brush</span>
 
-        ctx.drawImage(
-            oldCanvas,
-            0,
-            0,
-            oldCanvas.width,
-            oldCanvas.height,
-            0,
-            0,
-            canvas.width,
-            canvas.height
-        );
-    }
+        </button>
 
 
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-}
+        <!-- ERASER -->
+        <button
+            class="tool-button"
+            data-tool="eraser"
+            title="Eraser">
 
+            🧽
+            <span>Eraser</span>
 
-/* =========================================
-   INITIAL CANVAS
-========================================= */
+        </button>
 
-function initializeCanvas() {
 
-    const rect =
-        canvas.getBoundingClientRect();
+        <!-- FILL -->
+        <button
+            class="tool-button"
+            data-tool="fill"
+            title="Fill">
 
+            🪣
+            <span>Fill</span>
 
-    canvas.width =
-        Math.floor(rect.width);
+        </button>
 
-    canvas.height =
-        Math.floor(rect.height);
 
+        <!-- COLOR PICKER -->
+        <button
+            class="tool-button"
+            data-tool="picker"
+            title="Color Picker">
 
-    ctx.fillStyle = "#ffffff";
+            💉
+            <span>Picker</span>
 
-    ctx.fillRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
+        </button>
 
 
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
+        <!-- TEXT -->
+        <button
+            class="tool-button"
+            data-tool="text"
+            title="Text">
 
+            🔤
+            <span>Text</span>
 
-    saveState();
-}
+        </button>
 
 
-/* =========================================
-   GET POSITION
-========================================= */
+        <div class="toolbar-separator"></div>
 
-function getPosition(event) {
 
-    const rect =
-        canvas.getBoundingClientRect();
+        <!-- UNDO -->
+        <button
+            id="undoBtn"
+            class="tool-button"
+            title="Undo">
 
+            ↩️
+            <span>Undo</span>
 
-    let clientX;
-    let clientY;
+        </button>
 
 
-    if (event.touches) {
+        <!-- REDO -->
+        <button
+            id="redoBtn"
+            class="tool-button"
+            title="Redo">
 
-        clientX =
-            event.touches[0].clientX;
+            ↪️
+            <span>Redo</span>
 
-        clientY =
-            event.touches[0].clientY;
+        </button>
 
-    } else {
 
-        clientX =
-            event.clientX;
+        <!-- DELETE -->
+        <button
+            id="deleteBtn"
+            class="tool-button"
+            title="Delete selected">
 
-        clientY =
-            event.clientY;
-    }
+            🗑️
+            <span>Delete</span>
 
+        </button>
 
-    return {
 
-        x:
-            (clientX - rect.left) *
-            (canvas.width / rect.width),
+        <!-- COPY -->
+        <button
+            id="copyBtn"
+            class="tool-button"
+            title="Copy">
 
-        y:
-            (clientY - rect.top) *
-            (canvas.height / rect.height)
-    };
-}
+            📋
+            <span>Copy</span>
 
+        </button>
 
-/* =========================================
-   START DRAWING
-========================================= */
 
-function startDrawing(event) {
+        <!-- PASTE -->
+        <button
+            id="pasteBtn"
+            class="tool-button"
+            title="Paste">
 
-    event.preventDefault();
+            📌
+            <span>Paste</span>
 
-    const pos =
-        getPosition(event);
+        </button>
 
+    </div>
 
-    startX = pos.x;
-    startY = pos.y;
 
-    lastX = pos.x;
-    lastY = pos.y;
+    <!-- =========================
+         SETTINGS BAR
+    ========================== -->
 
+    <div class="settings-bar">
 
-    drawing = true;
 
+        <!-- COLOR -->
+        <div class="setting">
 
-    if (currentTool === "pencil") {
+            <label>
+                Color
+            </label>
 
-        ctx.beginPath();
+            <input
+                type="color"
+                id="colorPicker"
+                value="#000000">
 
-        ctx.moveTo(
-            lastX,
-            lastY
-        );
+        </div>
 
-    } else if (currentTool === "eraser") {
 
-        ctx.beginPath();
+        <!-- SECOND COLOR -->
+        <div class="setting">
 
-        ctx.moveTo(
-            lastX,
-            lastY
-        );
+            <label>
+                Fill
+            </label>
 
-    }
-}
+            <input
+                type="color"
+                id="fillColor"
+                value="#ffffff">
 
+        </div>
 
-/* =========================================
-   DRAW
-========================================= */
 
-function draw(event) {
+        <!-- BRUSH SIZE -->
+        <div class="setting brush-setting">
 
-    if (!drawing) {
-        return;
-    }
+            <label>
+                Size
+            </label>
 
+            <input
+                type="range"
+                id="brushSize"
+                min="1"
+                max="100"
+                value="5">
 
-    event.preventDefault();
+            <span id="sizeValue">
+                5 px
+            </span>
 
+        </div>
 
-    const pos =
-        getPosition(event);
 
+        <!-- FONT -->
+        <div class="setting">
 
-    const x = pos.x;
-    const y = pos.y;
+            <label>
+                Font
+            </label>
 
+            <select id="fontFamily">
 
-    /* Pencil */
+                <option value="Arial">
+                    Arial
+                </option>
 
-    if (currentTool === "pencil") {
+                <option value="Verdana">
+                    Verdana
+                </option>
 
-        ctx.globalCompositeOperation =
-            "source-over";
+                <option value="Georgia">
+                    Georgia
+                </option>
 
-        ctx.strokeStyle =
-            colorPicker.value;
+                <option value="Times New Roman">
+                    Times New Roman
+                </option>
 
-        ctx.lineWidth =
-            Number(brushSize.value);
+                <option value="Courier New">
+                    Courier New
+                </option>
 
+            </select>
 
-        ctx.lineTo(x, y);
+        </div>
 
-        ctx.stroke();
 
+        <!-- FONT SIZE -->
+        <div class="setting">
 
-        lastX = x;
-        lastY = y;
+            <label>
+                Text Size
+            </label>
 
-        return;
-    }
+            <select id="fontSize">
 
+                <option value="16">
+                    16
+                </option>
 
-    /* Eraser */
+                <option value="24">
+                    24
+                </option>
 
-    if (currentTool === "eraser") {
+                <option value="32">
+                    32
+                </option>
 
-        ctx.globalCompositeOperation =
-            "destination-out";
+                <option value="48">
+                    48
+                </option>
 
-        ctx.lineWidth =
-            Number(brushSize.value) * 2;
+                <option value="64">
+                    64
+                </option>
 
+                <option value="96">
+                    96
+                </option>
 
-        ctx.lineTo(x, y);
+            </select>
 
-        ctx.stroke();
+        </div>
 
 
-        lastX = x;
-        lastY = y;
+        <!-- OUTLINE -->
+        <div class="setting">
 
-        return;
-    }
+            <label>
+                Outline
+            </label>
 
+            <select id="outlineStyle">
 
-    /* Shapes */
+                <option value="solid">
+                    Solid
+                </option>
 
-    if (currentShape) {
+                <option value="dashed">
+                    Dashed
+                </option>
 
-        redrawCurrentState();
+                <option value="dotted">
+                    Dotted
+                </option>
 
-        drawShape(
-            startX,
-            startY,
-            x,
-            y,
-            currentShape
-        );
-    }
-}
+            </select>
 
+        </div>
 
-/* =========================================
-   STOP DRAWING
-========================================= */
 
-function stopDrawing(event) {
+        <!-- ZOOM -->
+        <div class="setting zoom-setting">
 
-    if (!drawing) {
-        return;
-    }
+            <label>
+                Zoom
+            </label>
 
+            <button id="zoomOut">
+                −
+            </button>
 
-    event.preventDefault();
+            <span id="zoomValue">
+                100%
+            </span>
 
+            <button id="zoomIn">
+                +
+            </button>
 
-    const pos =
-        getPosition(event);
+        </div>
 
+    </div>
 
-    const x = pos.x;
-    const y = pos.y;
 
+    <!-- =========================
+         SHAPES BAR
+    ========================== -->
 
-    if (currentShape) {
+    <div class="shapes-panel">
 
-        redrawCurrentState();
+        <div class="shapes-title">
+            🔷 Shapes
+        </div>
 
-        drawShape(
-            startX,
-            startY,
-            x,
-            y,
-            currentShape
-        );
-    }
 
+        <div class="shapes-list">
 
-    drawing = false;
 
-    ctx.globalCompositeOperation =
-        "source-over";
+            <!-- 1 -->
+            <button
+                class="shape-button"
+                data-shape="line">
 
+                ➖
+                <small>Line</small>
 
-    saveState();
-}
+            </button>
 
 
-/* =========================================
-   DRAW SHAPE
-========================================= */
+            <!-- 2 -->
+            <button
+                class="shape-button"
+                data-shape="rectangle">
 
-function drawShape(
-    x1,
-    y1,
-    x2,
-    y2,
-    shape
-) {
+                ▭
+                <small>Rectangle</small>
 
-    const width = x2 - x1;
-    const height = y2 - y1;
+            </button>
 
-    const centerX =
-        x1 + width / 2;
 
-    const centerY =
-        y1 + height / 2;
+            <!-- 3 -->
+            <button
+                class="shape-button"
+                data-shape="rounded-rectangle">
 
+                ▢
+                <small>Rounded</small>
 
-    ctx.save();
+            </button>
 
 
-    ctx.globalCompositeOperation =
-        "source-over";
+            <!-- 4 -->
+            <button
+                class="shape-button"
+                data-shape="circle">
 
-    ctx.strokeStyle =
-        colorPicker.value;
+                ⭕
+                <small>Circle</small>
 
-    ctx.lineWidth =
-        Number(brushSize.value);
+            </button>
 
-    ctx.fillStyle = "transparent";
 
-    ctx.beginPath();
+            <!-- 5 -->
+            <button
+                class="shape-button"
+                data-shape="ellipse">
 
+                ⬭
+                <small>Ellipse</small>
 
-    /* =====================================
-       LINE
-    ===================================== */
+            </button>
 
-    if (shape === "line") {
 
-        ctx.moveTo(x1, y1);
+            <!-- 6 -->
+            <button
+                class="shape-button"
+                data-shape="triangle">
 
-        ctx.lineTo(x2, y2);
+                🔺
+                <small>Triangle</small>
 
-        ctx.stroke();
-    }
+            </button>
 
 
-    /* =====================================
-       RECTANGLE
-    ===================================== */
+            <!-- 7 -->
+            <button
+                class="shape-button"
+                data-shape="diamond">
 
-    else if (shape === "rectangle") {
+                🔷
+                <small>Diamond</small>
 
-        ctx.rect(
-            x1,
-            y1,
-            width,
-            height
-        );
+            </button>
 
-        ctx.stroke();
-    }
 
+            <!-- 8 -->
+            <button
+                class="shape-button"
+                data-shape="pentagon">
 
-    /* =====================================
-       SQUARE
-    ===================================== */
+                ⬟
+                <small>Pentagon</small>
 
-    else if (shape === "square") {
+            </button>
 
-        const size =
-            Math.min(
-                Math.abs(width),
-                Math.abs(height)
-            );
 
+            <!-- 9 -->
+            <button
+                class="shape-button"
+                data-shape="hexagon">
 
-        const sx =
-            width < 0
-                ? x1 - size
-                : x1;
+                ⬢
+                <small>Hexagon</small>
 
+            </button>
 
-        const sy =
-            height < 0
-                ? y1 - size
-                : y1;
 
+            <!-- 10 -->
+            <button
+                class="shape-button"
+                data-shape="star">
 
-        ctx.rect(
-            sx,
-            sy,
-            size,
-            size
-        );
+                ⭐
+                <small>Star</small>
 
-        ctx.stroke();
-    }
+            </button>
 
 
-    /* =====================================
-       CIRCLE
-    ===================================== */
+            <!-- 11 -->
+            <button
+                class="shape-button"
+                data-shape="heart">
 
-    else if (shape === "circle") {
+                ❤️
+                <small>Heart</small>
 
-        const radius =
-            Math.sqrt(
-                width * width +
-                height * height
-            ) / 2;
+            </button>
 
 
-        ctx.arc(
-            centerX,
-            centerY,
-            radius,
-            0,
-            Math.PI * 2
-        );
+            <!-- 12 -->
+            <button
+                class="shape-button"
+                data-shape="arrow">
 
-        ctx.stroke();
-    }
+                ➡️
+                <small>Arrow</small>
 
+            </button>
 
-    /* =====================================
-       ELLIPSE
-    ===================================== */
 
-    else if (shape === "ellipse") {
+            <!-- 13 -->
+            <button
+                class="shape-button"
+                data-shape="double-arrow">
 
-        ctx.ellipse(
-            centerX,
-            centerY,
-            Math.abs(width) / 2,
-            Math.abs(height) / 2,
-            0,
-            0,
-            Math.PI * 2
-        );
+                ↔️
+                <small>Double Arrow</small>
 
-        ctx.stroke();
-    }
+            </button>
 
 
-    /* =====================================
-       TRIANGLE
-    ===================================== */
+            <!-- 14 -->
+            <button
+                class="shape-button"
+                data-shape="cloud">
 
-    else if (shape === "triangle") {
+                ☁️
+                <small>Cloud</small>
 
-        ctx.moveTo(
-            centerX,
-            y1
-        );
+            </button>
 
-        ctx.lineTo(
-            x2,
-            y2
-        );
 
-        ctx.lineTo(
-            x1,
-            y2
-        );
+            <!-- 15 -->
+            <button
+                class="shape-button"
+                data-shape="lightning">
 
-        ctx.closePath();
+                ⚡
+                <small>Lightning</small>
 
-        ctx.stroke();
-    }
+            </button>
 
 
-    /* =====================================
-       INVERTED TRIANGLE
-    ===================================== */
+            <!-- 16 -->
+            <button
+                class="shape-button"
+                data-shape="sun">
 
-    else if (
-        shape === "inverted-triangle"
-    ) {
+                ☀️
+                <small>Sun</small>
 
-        ctx.moveTo(
-            x1,
-            y1
-        );
+            </button>
 
-        ctx.lineTo(
-            x2,
-            y1
-        );
 
-        ctx.lineTo(
-            centerX,
-            y2
-        );
+            <!-- 17 -->
+            <button
+                class="shape-button"
+                data-shape="crescent">
 
-        ctx.closePath();
+                🌙
+                <small>Crescent</small>
 
-        ctx.stroke();
-    }
+            </button>
 
 
-    /* =====================================
-       DIAMOND
-    ===================================== */
+            <!-- 18 -->
+            <button
+                class="shape-button"
+                data-shape="speech">
 
-    else if (shape === "diamond") {
+                💬
+                <small>Speech</small>
 
-        ctx.moveTo(
-            centerX,
-            y1
-        );
+            </button>
 
-        ctx.lineTo(
-            x2,
-            centerY
-        );
 
-        ctx.lineTo(
-            centerX,
-            y2
-        );
+            <!-- 19 -->
+            <button
+                class="shape-button"
+                data-shape="ring">
 
-        ctx.lineTo(
-            x1,
-            centerY
-        );
+                ⭕
+                <small>Ring</small>
 
-        ctx.closePath();
+            </button>
 
-        ctx.stroke();
-    }
 
+            <!-- 20 -->
+            <button
+                class="shape-button"
+                data-shape="polygon">
 
-    /* =====================================
-       PENTAGON
-    ===================================== */
+                🔶
+                <small>Polygon</small>
 
-    else if (shape === "pentagon") {
+            </button>
 
-        drawPolygon(
-            centerX,
-            centerY,
-            Math.min(
-                Math.abs(width),
-                Math.abs(height)
-            ) / 2,
-            5
-        );
-    }
+        </div>
 
+    </div>
 
-    /* =====================================
-       HEXAGON
-    ===================================== */
 
-    else if (shape === "hexagon") {
+    <!-- =========================
+         WORK AREA
+    ========================== -->
 
-        drawPolygon(
-            centerX,
-            centerY,
-            Math.min(
-                Math.abs(width),
-                Math.abs(height)
-            ) / 2,
-            6
-        );
-    }
+    <main class="workspace">
 
 
-    /* =====================================
-       STAR
-    ===================================== */
+        <!-- LEFT SIDE -->
+        <aside class="side-panel">
 
-    else if (shape === "star") {
+            <h3>
+                🛠️ Tools
+            </h3>
 
-        drawStar(
-            centerX,
-            centerY,
-            Math.min(
-                Math.abs(width),
-                Math.abs(height)
-            ) / 2
-        );
-    }
+            <p>
+                Select a tool or shape
+                and start drawing.
+            </p>
 
 
-    /* =====================================
-       HEART
-    ===================================== */
+            <div class="tip">
 
-    else if (shape === "heart") {
+                💡 Tip
 
-        const scale =
-            Math.min(
-                Math.abs(width),
-                Math.abs(height)
-            ) / 100;
+                <br>
 
+                Select tool se kisi
+                shape ko move aur
+                resize kar sakte ho.
 
-        ctx.moveTo(
-            centerX,
-            y2
-        );
+            </div>
 
 
-        ctx.bezierCurveTo(
-            x1 - 20 * scale,
-            centerY,
-            x1,
-            y1 - 10 * scale,
-            centerX,
-            centerY
-        );
+            <div class="shortcuts">
 
+                <h4>
+                    ⌨️ Shortcuts
+                </h4>
 
-        ctx.bezierCurveTo(
-            x2,
-            y1 - 10 * scale,
-            x2 + 20 * scale,
-            centerY,
-            centerX,
-            y2
-        );
+                <p>
+                    Ctrl + Z = Undo
+                </p>
 
+                <p>
+                    Ctrl + Y = Redo
+                </p>
 
-        ctx.stroke();
-    }
+                <p>
+                    Delete = Remove
+                </p>
 
+                <p>
+                    Ctrl + S = Save
+                </p>
 
-    /* =====================================
-       CLOUD
-    ===================================== */
+            </div>
 
-    else if (shape === "cloud") {
+        </aside>
 
-        ctx.arc(
-            x1 + width * 0.25,
-            centerY,
-            Math.abs(width) * 0.18,
-            0,
-            Math.PI * 2
-        );
 
+        <!-- CANVAS -->
+        <section class="canvas-wrapper">
 
-        ctx.arc(
-            x1 + width * 0.45,
-            centerY - Math.abs(height) * 0.15,
-            Math.abs(width) * 0.22,
-            0,
-            Math.PI * 2
-        );
+            <div class="canvas-top">
 
+                <span id="toolStatus">
+                    Select Tool
+                </span>
 
-        ctx.arc(
-            x1 + width * 0.7,
-            centerY,
-            Math.abs(width) * 0.2,
-            0,
-            Math.PI * 2
-        );
+                <span id="objectStatus">
+                    Objects: 0
+                </span>
 
+            </div>
 
-        ctx.stroke();
-    }
 
+            <div
+                class="canvas-container"
+                id="canvasContainer">
 
-    /* =====================================
-       LIGHTNING
-    ===================================== */
+                <canvas
+                    id="drawingCanvas">
+                </canvas>
 
-    else if (shape === "lightning") {
+            </div>
 
-        ctx.moveTo(
-            centerX + width * 0.05,
-            y1
-        );
 
-        ctx.lineTo(
-            x1 + width * 0.35,
-            centerY
-        );
+            <div class="canvas-bottom">
 
-        ctx.lineTo(
-            centerX,
-            centerY
-        );
+                <span>
+                    🖱️ Mouse / Touch supported
+                </span>
 
-        ctx.lineTo(
-            x1 + width * 0.35,
-            y2
-        );
+                <span id="coordinates">
+                    X: 0 Y: 0
+                </span>
 
-        ctx.lineTo(
-            x2,
-            y1 + height * 0.35
-        );
+            </div>
 
-        ctx.lineTo(
-            centerX + width * 0.05,
-            y1 + height * 0.4
-        );
+        </section>
 
-        ctx.closePath();
+    </main>
 
-        ctx.stroke();
-    }
 
+    <!-- =========================
+         STATUS BAR
+    ========================== -->
 
-    /* =====================================
-       ARROW
-    ===================================== */
+    <footer class="status-bar">
 
-    else if (shape === "arrow") {
+        <span>
+            🎨 My Paint Studio
+        </span>
 
-        drawArrow(
-            x1,
-            y1,
-            x2,
-            y2
-        );
-    }
+        <span>
+            Ready
+        </span>
 
+        <span>
+            100%
+        </span>
 
-    /* =====================================
-       DOUBLE ARROW
-    ===================================== */
+    </footer>
 
-    else if (
-        shape === "double-arrow"
-    ) {
 
-        drawArrow(
-            x1,
-            centerY,
-            x2,
-            centerY
-        );
+    <!-- =========================
+         JAVASCRIPT
+    ========================== -->
 
-        drawArrow(
-            x2,
-            centerY,
-            x1,
-            centerY
-        );
-    }
+    <script src="script.js"></script>
 
+</body>
 
-    /* =====================================
-       CRESCENT
-    ===================================== */
-
-    else if (shape === "crescent") {
-
-        const radius =
-            Math.min(
-                Math.abs(width),
-                Math.abs(height)
-            ) / 2;
-
-
-        ctx.arc(
-            centerX,
-            centerY,
-            radius,
-            0,
-            Math.PI * 2
-        );
-
-
-        ctx.moveTo(
-            centerX + radius * 0.35,
-            centerY - radius
-        );
-
-
-        ctx.arc(
-            centerX + radius * 0.35,
-            centerY,
-            radius,
-            -Math.PI / 2,
-            Math.PI / 2,
-            true
-        );
-
-
-        ctx.stroke();
-    }
-
-
-    /* =====================================
-       SUN
-    ===================================== */
-
-    else if (shape === "sun") {
-
-        const radius =
-            Math.min(
-                Math.abs(width),
-                Math.abs(height)
-            ) / 4;
-
-
-        ctx.arc(
-            centerX,
-            centerY,
-            radius,
-            0,
-            Math.PI * 2
-        );
-
-
-        ctx.stroke();
-
-
-        for (
-            let i = 0;
-            i < 12;
-            i++
-        ) {
-
-            const angle =
-                i *
-                (Math.PI * 2 / 12);
-
-
-            const innerRadius =
-                radius + 8;
-
-
-            const outerRadius =
-                radius + 25;
-
-
-            ctx.moveTo(
-                centerX +
-                Math.cos(angle) *
-                innerRadius,
-
-                centerY +
-                Math.sin(angle) *
-                innerRadius
-            );
-
-
-            ctx.lineTo(
-                centerX +
-                Math.cos(angle) *
-                outerRadius,
-
-                centerY +
-                Math.sin(angle) *
-                outerRadius
-            );
-        }
-
-
-        ctx.stroke();
-    }
-
-
-    /* =====================================
-       SPEECH BUBBLE
-    ===================================== */
-
-    else if (shape === "speech") {
-
-        const radiusX =
-            Math.abs(width) / 2;
-
-        const radiusY =
-            Math.abs(height) / 2;
-
-
-        ctx.ellipse(
-            centerX,
-            centerY,
-            radiusX,
-            radiusY,
-            0,
-            0,
-            Math.PI * 2
-        );
-
-
-        ctx.moveTo(
-            x1 + width * 0.25,
-            y2 - 5
-        );
-
-
-        ctx.lineTo(
-            x1 + width * 0.15,
-            y2 + 20
-        );
-
-
-        ctx.lineTo(
-            x1 + width * 0.4,
-            y2
-        );
-
-
-        ctx.stroke();
-    }
-
-
-    /* =====================================
-       RING
-    ===================================== */
-
-    else if (shape === "ring") {
-
-        const radius =
-            Math.min(
-                Math.abs(width),
-                Math.abs(height)
-            ) / 2;
-
-
-        ctx.arc(
-            centerX,
-            centerY,
-            radius,
-            0,
-            Math.PI * 2
-        );
-
-
-        ctx.stroke();
-
-
-        ctx.beginPath();
-
-
-        ctx.arc(
-            centerX,
-            centerY,
-            radius * 0.55,
-            0,
-            Math.PI * 2
-        );
-
-
-        ctx.stroke();
-    }
-
-
-    ctx.restore();
-}
-
-
-/* =========================================
-   POLYGON
-========================================= */
-
-function drawPolygon(
-    centerX,
-    centerY,
-    radius,
-    sides
-) {
-
-    ctx.beginPath();
-
-
-    for (
-        let i = 0;
-        i < sides;
-        i++
-    ) {
-
-        const angle =
-            -Math.PI / 2 +
-            i * (Math.PI * 2 / sides);
-
-
-        const x =
-            centerX +
-            Math.cos(angle) *
-            radius;
-
-
-        const y =
-            centerY +
-            Math.sin(angle) *
-            radius;
-
-
-        if (i === 0) {
-
-            ctx.moveTo(x, y);
-
-        } else {
-
-            ctx.lineTo(x, y);
-        }
-    }
-
-
-    ctx.closePath();
-
-    ctx.stroke();
-}
-
-
-/* =========================================
-   STAR
-========================================= */
-
-function drawStar(
-    centerX,
-    centerY,
-    radius
-) {
-
-    const spikes = 5;
-
-    const innerRadius =
-        radius * 0.45;
-
-
-    ctx.beginPath();
-
-
-    for (
-        let i = 0;
-        i < spikes * 2;
-        i++
-    ) {
-
-        const angle =
-            -Math.PI / 2 +
-            i * Math.PI / spikes;
-
-
-        const r =
-            i % 2 === 0
-                ? radius
-                : innerRadius;
-
-
-        const x =
-            centerX +
-            Math.cos(angle) * r;
-
-
-        const y =
-            centerY +
-            Math.sin(angle) * r;
-
-
-        if (i === 0) {
-
-            ctx.moveTo(x, y);
-
-        } else {
-
-            ctx.lineTo(x, y);
-        }
-    }
-
-
-    ctx.closePath();
-
-    ctx.stroke();
-}
-
-
-/* =========================================
-   ARROW
-========================================= */
-
-function drawArrow(
-    x1,
-    y1,
-    x2,
-    y2
-) {
-
-    const angle =
-        Math.atan2(
-            y2 - y1,
-            x2 - x1
-        );
-
-
-    const headLength = 20;
-
-
-    ctx.moveTo(x1, y1);
-
-    ctx.lineTo(x2, y2);
-
-
-    ctx.moveTo(
-        x2,
-        y2
-    );
-
-
-    ctx.lineTo(
-        x2 -
-        headLength *
-        Math.cos(
-            angle - Math.PI / 6
-        ),
-
-        y2 -
-        headLength *
-        Math.sin(
-            angle - Math.PI / 6
-        )
-    );
-
-
-    ctx.moveTo(
-        x2,
-        y2
-    );
-
-
-    ctx.lineTo(
-        x2 -
-        headLength *
-        Math.cos(
-            angle + Math.PI / 6
-        ),
-
-        y2 -
-        headLength *
-        Math.sin(
-            angle + Math.PI / 6
-        )
-    );
-
-
-    ctx.stroke();
-}
-
-
-/* =========================================
-   REDRAW SAVED STATE
-========================================= */
-
-function redrawCurrentState() {
-
-    if (
-        historyIndex < 0 ||
-        !history[historyIndex]
-    ) {
-
-        clearCanvasOnly();
-
-        return;
-    }
-
-
-    const image =
-        new Image();
-
-
-    image.onload = function() {
-
-        clearCanvasOnly();
-
-        ctx.drawImage(
-            image,
-            0,
-            0
-        );
-    };
-
-
-    image.src =
-        history[historyIndex];
-}
-
-
-/* =========================================
-   CLEAR CANVAS
-========================================= */
-
-function clearCanvasOnly() {
-
-    ctx.globalCompositeOperation =
-        "source-over";
-
-    ctx.fillStyle =
-        "#ffffff";
-
-
-    ctx.fillRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
-}
-
-
-/* =========================================
-   SAVE STATE
-========================================= */
-
-function saveState() {
-
-    /*
-       Remove redo states
-    */
-
-    history =
-        history.slice(
-            0,
-            historyIndex + 1
-        );
-
-
-    history.push(
-        canvas.toDataURL()
-    );
-
-
-    historyIndex =
-        history.length - 1;
-
-
-    /*
-       Limit history
-       so browser memory
-       doesn't grow forever.
-    */
-
-    if (history.length > 30) {
-
-        history.shift();
-
-        historyIndex--;
-    }
-}
-
-
-/* =========================================
-   UNDO
-========================================= */
-
-function undo() {
-
-    if (historyIndex <= 0) {
-
-        return;
-    }
-
-
-    historyIndex--;
-
-    loadHistoryState();
-}
-
-
-/* =========================================
-   REDO
-========================================= */
-
-function redo() {
-
-    if (
-        historyIndex >=
-        history.length - 1
-    ) {
-
-        return;
-    }
-
-
-    historyIndex++;
-
-    loadHistoryState();
-}
-
-
-/* =========================================
-   LOAD HISTORY
-========================================= */
-
-function loadHistoryState() {
-
-    const image =
-        new Image();
-
-
-    image.onload = function() {
-
-        clearCanvasOnly();
-
-        ctx.drawImage(
-            image,
-            0,
-            0,
-            canvas.width,
-            canvas.height
-        );
-    };
-
-
-    image.src =
-        history[historyIndex];
-}
-
-
-/* =========================================
-   CLEAR
-========================================= */
-
-function clearCanvas() {
-
-    const answer =
-        confirm(
-            "Kya aap poori drawing clear karna chahte hain?"
-        );
-
-
-    if (!answer) {
-        return;
-    }
-
-
-    clearCanvasOnly();
-
-    saveState();
-}
-
-
-/* =========================================
-   SAVE PNG
-========================================= */
-
-function saveDrawing() {
-
-    const link =
-        document.createElement("a");
-
-
-    link.download =
-        "my-drawing.png";
-
-
-    link.href =
-        canvas.toDataURL(
-            "image/png"
-        );
-
-
-    link.click();
-}
-
-
-/* =========================================
-   TOOL BUTTONS
-========================================= */
-
-toolButtons.forEach(
-    button => {
-
-        button.addEventListener(
-            "click",
-            function() {
-
-                toolButtons.forEach(
-                    btn =>
-                        btn.classList.remove(
-                            "active"
-                        )
-                );
-
-
-                shapeButtons.forEach(
-                    btn =>
-                        btn.classList.remove(
-                            "active"
-                        )
-                );
-
-
-                this.classList.add(
-                    "active"
-                );
-
-
-                currentTool =
-                    this.dataset.tool;
-
-
-                currentShape = null;
-            }
-        );
-    }
-);
-
-
-/* =========================================
-   SHAPE BUTTONS
-========================================= */
-
-shapeButtons.forEach(
-    button => {
-
-        button.addEventListener(
-            "click",
-            function() {
-
-                toolButtons.forEach(
-                    btn =>
-                        btn.classList.remove(
-                            "active"
-                        )
-                );
-
-
-                shapeButtons.forEach(
-                    btn =>
-                        btn.classList.remove(
-                            "active"
-                        )
-                );
-
-
-                this.classList.add(
-                    "active"
-                );
-
-
-                currentTool =
-                    "shape";
-
-
-                currentShape =
-                    this.dataset.shape;
-            }
-        );
-    }
-);
-
-
-/* =========================================
-   BRUSH SIZE
-========================================= */
-
-brushSize.addEventListener(
-    "input",
-    function() {
-
-        sizeValue.textContent =
-            `${this.value} px`;
-    }
-);
-
-
-/* =========================================
-   MOUSE EVENTS
-========================================= */
-
-canvas.addEventListener(
-    "mousedown",
-    startDrawing
-);
-
-
-canvas.addEventListener(
-    "mousemove",
-    draw
-);
-
-
-canvas.addEventListener(
-    "mouseup",
-    stopDrawing
-);
-
-
-canvas.addEventListener(
-    "mouseleave",
-    stopDrawing
-);
-
-
-/* =========================================
-   TOUCH EVENTS
-========================================= */
-
-canvas.addEventListener(
-    "touchstart",
-    startDrawing,
-    { passive: false }
-);
-
-
-canvas.addEventListener(
-    "touchmove",
-    draw,
-    { passive: false }
-);
-
-
-canvas.addEventListener(
-    "touchend",
-    stopDrawing,
-    { passive: false }
-);
-
-
-/* =========================================
-   BUTTON EVENTS
-========================================= */
-
-undoBtn.addEventListener(
-    "click",
-    undo
-);
-
-
-redoBtn.addEventListener(
-    "click",
-    redo
-);
-
-
-clearBtn.addEventListener(
-    "click",
-    clearCanvas
-);
-
-
-saveBtn.addEventListener(
-    "click",
-    saveDrawing
-);
-
-
-/* =========================================
-   WINDOW RESIZE
-========================================= */
-
-window.addEventListener(
-    "resize",
-    function() {
-
-        /*
-           Canvas resize can affect
-           drawing dimensions, so only
-           resize when necessary.
-        */
-
-        const current =
-            canvas.toDataURL();
-
-
-        const image =
-            new Image();
-
-
-        image.onload = function() {
-
-            const rect =
-                canvas.getBoundingClientRect();
-
-
-            canvas.width =
-                Math.floor(rect.width);
-
-
-            canvas.height =
-                Math.floor(rect.height);
-
-
-            ctx.fillStyle =
-                "#ffffff";
-
-
-            ctx.fillRect(
-                0,
-                0,
-                canvas.width,
-                canvas.height
-            );
-
-
-            ctx.drawImage(
-                image,
-                0,
-                0,
-                canvas.width,
-                canvas.height
-            );
-        };
-
-
-        image.src = current;
-    }
-);
-
-
-/* =========================================
-   START
-========================================= */
-
-initializeCanvas();
+</html>
