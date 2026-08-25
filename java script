@@ -1,0 +1,147 @@
+<script>
+const display = document.getElementById("display");
+
+const buttons = document.querySelectorAll("button");
+
+buttons.forEach(button => {
+    button.addEventListener("click", () => {
+        const value = button.innerText;
+
+        if (value === "AC") {
+            display.value = "";
+        }
+
+        else if (value === "DEL") {
+            display.value = display.value.slice(0, -1);
+        }
+
+        else if (value === "=") {
+            calculate();
+        }
+
+        else if (value === "√") {
+            calculateFunction("sqrt");
+        }
+
+        else if (value === "x²") {
+            calculateFunction("square");
+        }
+
+        else if (value === "1/x") {
+            calculateFunction("reciprocal");
+        }
+
+        else if (value === "sin") {
+            calculateFunction("sin");
+        }
+
+        else if (value === "cos") {
+            calculateFunction("cos");
+        }
+
+        else if (value === "tan") {
+            calculateFunction("tan");
+        }
+
+        else if (value === "log") {
+            calculateFunction("log");
+        }
+
+        else if (value === "ln") {
+            calculateFunction("ln");
+        }
+
+        else if (value === "π") {
+            display.value += Math.PI;
+        }
+
+        else if (value === "e") {
+            display.value += Math.E;
+        }
+
+        else if (value === "!") {
+            factorial();
+        }
+
+        else {
+            display.value += value;
+        }
+    });
+});
+
+function calculate() {
+    try {
+        let expression = display.value
+            .replace(/×/g, "*")
+            .replace(/÷/g, "/")
+            .replace(/−/g, "-");
+
+        display.value = Function("return " + expression)();
+    } catch {
+        display.value = "Error";
+    }
+}
+
+function calculateFunction(type) {
+    try {
+        const number = parseFloat(display.value);
+
+        if (isNaN(number)) {
+            display.value = "Error";
+            return;
+        }
+
+        if (type === "sqrt") {
+            display.value = Math.sqrt(number);
+        }
+
+        if (type === "square") {
+            display.value = number ** 2;
+        }
+
+        if (type === "reciprocal") {
+            display.value = 1 / number;
+        }
+
+        if (type === "sin") {
+            display.value = Math.sin(number * Math.PI / 180);
+        }
+
+        if (type === "cos") {
+            display.value = Math.cos(number * Math.PI / 180);
+        }
+
+        if (type === "tan") {
+            display.value = Math.tan(number * Math.PI / 180);
+        }
+
+        if (type === "log") {
+            display.value = Math.log10(number);
+        }
+
+        if (type === "ln") {
+            display.value = Math.log(number);
+        }
+
+    } catch {
+        display.value = "Error";
+    }
+}
+
+function factorial() {
+    let number = parseInt(display.value);
+
+    if (number < 0 || isNaN(number)) {
+        display.value = "Error";
+        return;
+    }
+
+    let result = 1;
+
+    for (let i = 1; i <= number; i++) {
+        result *= i;
+    }
+
+    display.value = result;
+}
+</script>
